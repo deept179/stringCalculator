@@ -1,23 +1,62 @@
-import logo from './logo.svg';
+import React, { useState } from 'react';
 import './App.css';
 
+function add(numbers) {
+  if (numbers === "") {
+    return 0;
+  }
+
+  const checkForNegatives = (numbersArray) => {
+    const negatives = numbersArray.filter(num => num < 0);
+    if (negatives.length > 0) {
+      throw new Error(`Negative numbers not allowed: ${negatives.join(", ")}`);
+    }
+  };
+
+  let delimiter = /,|\n/;
+  if (numbers.startsWith("//")) {
+    const customDelimiterPattern = /^\/\/(.+)\n/;
+    const match = numbers.match(customDelimiterPattern);
+    if (match) {
+      delimiter = new RegExp(match[1]);
+      numbers = numbers.replace(customDelimiterPattern, "");
+    }
+  }
+
+  const numberArray = numbers.split(delimiter).map(num => parseInt(num));
+  checkForNegatives(numberArray);
+
+  return numberArray.reduce((sum, num) => sum + (isNaN(num) ? 0 : num), 0);
+}
+
 function App() {
+  const [input, setInput] = useState("");
+  const [result, setResult] = useState(null);
+  const [error, setError] = useState(null);
+
+  const handleCalculate = () => {
+    try {
+      setError(null);
+      const sum = add(input);
+      setResult(sum);
+    } catch (e) {
+      setError(e.message);
+    }
+  };
+
   return (
     <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+      <h1>String Calculator</h1>
+      <input
+        type="text"
+        value={input}
+        onChange={(e) => setInput(e.target.value)}
+        placeholder="Enter numbers (e.g., 1,2 or //;\n1;2)"
+      />
+      <button onClick={handleCalculate}>Calculate</button>
+
+      {error && <p className="error">{error}</p>}
+      {result !== null && !error && <p>Result: {result}</p>}
     </div>
   );
 }
